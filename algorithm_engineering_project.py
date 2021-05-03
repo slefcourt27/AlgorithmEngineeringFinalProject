@@ -36,6 +36,9 @@ class DoublyLinkedList:
 
     def exists(self, element):
         node = self.head
+
+        if type(element) == Node:
+            element = element.data
         while node:
             if node.data == element:
                 return True
@@ -46,17 +49,22 @@ class DoublyLinkedList:
    # dele --> pointer to node to be deleted
 
     def deleteNode(self, dele):
-        # if self.exists(dele) == False:
-        #     print(dele.data, "does not exist here.")
-        #     return
         # Base Case
-        if self.head is None or dele is None:
-            return
+        # if self.head is None or dele is None:
+        #     print("Deleting without head.")
+        #     self.num_items -= 1
+        #     return
 
         # If node to be deleted is head node
         if self.head == dele:
-            self.head = dele.next
-
+            if self.head.data == self.tail.data:
+                self.head = None
+                self.tail = None
+            else:
+                self.head = dele.next
+        if self.tail == dele:
+            self.tail = self.tail.prev
+            self.tail.next = None
         # Change next only if node to be deleted is NOT
         # the last node
         if dele.next is not None:
@@ -67,6 +75,7 @@ class DoublyLinkedList:
         if dele.prev is not None:
             dele.prev.next = dele.next
         # Finally, free the memory occupied by dele
+        self.printList()
         self.num_items -= 1
         return
 
@@ -133,18 +142,28 @@ class DoublyLinkedList:
 
         # 4. If the Linked List is empty, then make the
         # new node as head
-        print("Appending", new_data.data)
-        if self.head is None:
-            print("No head -", self.head)
+        if self.tail is None:
+            print("Current self.tail is NONE")
+        else:
+            print("Current self.tail is", self.tail.data)
+
+        if self.tail is None and self.head is not None:
+            self.tail = self.head
+
+        if self.head is None and self.tail is not None:
+            self.head = self.tail
+
+        if self.head is None and self.tail is None:
             self.head = new_node
             self.tail = new_node
             return
 
-        if self.tail is None:
-            print("No self.tail!")
+
         self.tail.next = new_node
         new_node.prev = self.tail
         self.tail = new_node
+
+        # self.printList()
         return
 
     # This function prints contents of linked list
@@ -667,7 +686,7 @@ class Vertex():
     # Field 1
     self.id = id
     # Field 2
-    self.edge_list_ptr = -1 # Pointer to edge list will be the index NOTE
+    self.edge_list_ptr = id # Pointer to edge list will be the index NOTE
     # Field 3
     self.color = -1
     self.degree = 0
@@ -676,7 +695,8 @@ class Vertex():
     self.order_deleted_list_ptr = -1
 
 def create_graph_from_file_input(fname):
-    # print("Create graph from file input")
+    print("Create graph from file input")
+    print("!!!!!!!")
     line_number = 1
     num_vertices = 0
 
@@ -717,6 +737,7 @@ def create_graph_from_file_input(fname):
       # print("Line number", line_number)
       # print("Curr vertex", curr_vertex)
       curr_degree = created_vertices[curr_vertex].degree
+      print("CURRENT DEGREE IS", curr_degree)
       if curr_vertex == P.myLen()-1:
           skip = True
 
@@ -733,7 +754,7 @@ def create_graph_from_file_input(fname):
               # print("(1) Grow to", curr_degree, "for vertex", curr_vertex)
               degree_list.grow(curr_degree, insertDLL=True)
 
-            # print("Appending current vertex", curr_vertex, "in file input ")
+            print("Appending current vertex", curr_vertex, "in file input to degree ", curr_degree, created_vertices[curr_vertex].degree)
             degree_list[curr_degree].append(curr_vertex)
             curr_vertex += 1
             if curr_vertex == P.myLen()-1:
@@ -750,7 +771,7 @@ def create_graph_from_file_input(fname):
             degree_list.grow(curr_degree, insertDLL=True)
 
           degree_list[curr_degree].append(curr_vertex)
-          # print("Current degree is", curr_degree, "adding", curr_vertex)
+          print("Current degree is", curr_degree, "adding", curr_vertex)
           break
 
       # Break up the line by space
@@ -770,8 +791,8 @@ def create_graph_from_file_input(fname):
       adjacent_vertex = int(line_list[0])
       weight = int(line_list[1])
       # print("Adjacent vertex is", adjacent_vertex)
-      # print("Current vertex is", curr_vertex)
-      # print("Appending adjacent vertex file input")
+      print("Current vertex is", curr_vertex)
+      print("Appending adjacent vertex file input")
       adj_list[curr_vertex].append(adjacent_vertex)
       created_vertices[curr_vertex].degree += 1
       line_number += 1
@@ -784,8 +805,8 @@ def smallest_last_vertex_ordering(vertices, degree_list, adj_list):
   # Degree list is a list of DLL with integers
   # Essentially takes the create_graph_from_file_input output and performs
   # smallest last vertex ordering on it
-  # print("Performing SLVO")
-  # print("===============")
+  print("Performing SLVO")
+  print("===============")
   # print("Checking degree list")
 
   removed_vertices = 0
@@ -800,22 +821,24 @@ def smallest_last_vertex_ordering(vertices, degree_list, adj_list):
         # print("vertex", id, "has degree", vertex.degree, end=' | ')
     while degree_list[checking_degree].num_items == 0:
         checking_degree += 1
-        # print("Checking degree", checking_degree)
+        print("Checking degree", checking_degree)
         # print("Removed", removed_vertices, "vertices")
         # print("Degree list length:", degree_list.myLen())
 
         # print("Number of Vertices removed", removed_vertices)
         # print("num items in degree list of ", checking_degree, degree_list[checking_degree].num_items)
-
+    print("Degree", checking_degree)
+    degree_list[checking_degree].printList()
     # print()
     # print("Using degree", checking_degree)
     # Remove head
 
     vertex_removed = degree_list[checking_degree].head
-    # print("Removing vertex", vertex_removed.data, " has id", vertex_removed.id)
 
     # Update the position in degree_list
     vertex_removed_degree = vertices[vertex_removed.data].degree
+    print("REMOVING VERTEX", vertex_removed.data, "with degree", vertex_removed_degree)
+
     degree_list[vertex_removed_degree].deleteNode(vertex_removed)
     # Update the deleted degree list so I can find terminal clique later
     deleted_degree_list.insert(vertex_removed_degree)
@@ -825,6 +848,8 @@ def smallest_last_vertex_ordering(vertices, degree_list, adj_list):
       max_degree_when_deleted = vertex_removed_degree
 
     # Update deleted list
+    # print("Deleting ", vertex_removed.id, vertex_removed.data)
+    # print("Type of vertex removed is ", type(vertex_removed))
     deleted_list.insert(vertex_removed)
     # Update vertex
     vertices[vertex_removed.data].degree = -1
@@ -845,27 +870,31 @@ def smallest_last_vertex_ordering(vertices, degree_list, adj_list):
       if connected_node_degree != -1:
           # print("Searching for vertex", node.data, "with degree", vertices[node.data].degree)
           if degree_list[connected_node_degree].exists(connected_node.data) == False:
-              print("Vertex", connected_node_degree.data, "does not exist in degree list of", connected_node_degree)
-              degree_list[node_degree].printList(degree_list[node_degree].head)
+              print("Vertex", connected_node.data, "does not exist in degree list of", connected_node_degree)
+              degree_list[connected_node_degree].printList()
 
           search_node = degree_list[connected_node_degree].head
-          # Decrease its degree
-          vertices[connected_node.data].degree -= 1
+
 
           # Find which node is representing this vertex
-          print("Searching for", connected_node.data)
+          # print("Searching for", connected_node.data)
           while search_node.data != connected_node.data:
               search_node = search_node.next
 
           # if search_node is not None:
           # Delete it from current degree in dg list
-          print("Node degree is ", connected_node_degree)
+          # print("Node degree is ", connected_node_degree)
+          print("Connected node is", connected_node.data, "search node is", search_node.data)
           degree_list[vertices[connected_node.data].degree].deleteNode(search_node)
-          print("Removed ", search_node.data)
+          # print("Removed ", search_node.data)
           # Place it in new DLL
-          print("Moving ", search_node.data, " into ", connected_node_degree-1)
-          degree_list[vertices[connected_node.data].degree].append(search_node)
-          degree_list[vertices[connected_node.data].degree].printList()
+          print("Moving ", search_node.data, " with degree ", connected_node_degree, "into", vertices[connected_node.data].degree-1)
+
+          if connected_node_degree != 0:
+              degree_list[vertices[connected_node.data].degree-1].append(connected_node)
+              degree_list[vertices[connected_node.data].degree-1].printList()
+          # Decrease its degree
+          vertices[connected_node.data].degree -= 1
 
       connected_node = connected_node.next
   # print("List of deleted vertices: ")
@@ -991,7 +1020,7 @@ def largest_last_vertex_ordering(vertices, degree_list, adj_list):
           # print("Searching for vertex", node.data, "with degree", vertices[node.data].degree)
           if degree_list[node_degree].exists(node.data) == False:
               # print("Vertex", node.data, "does not exist in degree list of", node_degree)
-              degree_list[node_degree].printList(degree_list[node_degree].head)
+              degree_list[node_degree].printList()
 
           search_node = degree_list[node_degree].head
           # Decrease its degree
@@ -1187,6 +1216,8 @@ def scan_and_assign_colors(vertices, degree_list, deleted_degree_list, deleted_l
   # Go from end
   # print("============================")
   # print("Scan and assign colors")
+  # for vertex in deleted_list:
+  #     print(vertex.id, end=',')
   idx = deleted_degree_list.myLen() - 1
 
   # Find the terminal clique
@@ -1214,7 +1245,7 @@ def scan_and_assign_colors(vertices, degree_list, deleted_degree_list, deleted_l
 
   while idx >= 0:
     id = deleted_list[idx].id # ID of vertex
-
+    print("ID is ", id)
     max_color = deleted_degree_list[idx] + 1
     color_list = Array()
     for i in range(max_color+1):
@@ -1246,15 +1277,18 @@ def scan_and_assign_colors(vertices, degree_list, deleted_degree_list, deleted_l
     if chosen_color == -1:
       print("Can't color graph using this number of colors.")
 
+    # print(id, "CHOSE COLOR ", chosen_color)
     vertices[id].color = chosen_color
     idx -= 1
 
   # print("Final coloring")
   colored_list = Array()
-  for id, v in enumerate(vertices):
-      # print(id, "has color", v.color)
+  for i in range(vertices.myLen()):
+      v = vertices[i]
+      # print(v.id, "has color", v.color)
       colored_list.insert(v.color)
 
+  print("COLORS NEEDED IS ", colors_needed)
   return vertices, max_degree_when_deleted, size_terminal_clique, colors_needed, colored_list
 
 def part2(v, name):
@@ -1347,7 +1381,7 @@ def part2plots():
     vertex_amount = Array()
     cn_list = Array()
 
-    i = 30
+    i = 10
     multiplier = int(input("Multiplier for edges: "))
     e = multiplier * i
     print("0: SLVO")
@@ -1406,7 +1440,7 @@ def part2plots():
             degrees = reversed(deleted_degree_list.items)
             scatter_plot(x=list(range(1,len(deleted_degree_list.items)+1)), y=deleted_degree_list.items, graph_type=graph_type, order=selected_ordering, multiplier=multiplier)
 
-        i += 30
+        i += 10
 
     # Plots with lines
     plot(vertex_amount, ordering_times, graph_type, folder='order', order=selected_ordering, multiplier=multiplier)
